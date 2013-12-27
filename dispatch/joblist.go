@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/skiesel/distribute"
+	"github.com/velour/distribute"
 	"container/list"
 	"log"
 	"os"
@@ -96,7 +96,7 @@ func (j *joblist) Go(finished chan<- bool) {
 		if j.q.Len() > 0 {
 			front = j.q.Front().Value.(string)
 
-			if strings.Contains(front, distribute.BARRIER_TOKEN) {
+			if strings.Contains(front, distribute.BarrierToken) {
 				barrierActive = true
 				j.n--
 				completionMark = j.ntot - j.n

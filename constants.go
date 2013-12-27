@@ -1,6 +1,6 @@
 package distribute
 
 var (
-	BARRIER_TOKEN = "PLEASE WAIT HERE"
-	REMOTE_TERMINATION_TOKEN = "PLEASE TERMINATE"
+	BarrierToken = "PLEASE WAIT HERE"
+	RemoteTerminationToken = "PLEASE TERMINATE"
 )

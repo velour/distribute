@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/skiesel/distribute"
+	"github.com/velour/distribute"
 	"net"
 	"net/rpc"
 	"strconv"
@@ -13,7 +13,7 @@ type JobAdder struct {
 
 func (ja JobAdder) PushCommands(commands *[]string, res *struct{}) error {
 	for _, command := range *commands {
-		if command == distribute.REMOTE_TERMINATION_TOKEN {
+		if command == distribute.RemoteTerminationToken {
 			// I don't know why but if someone stuck a termination token
 			// in the middle of this command slice, don't post anything after it
 			ja.joblist.eof <- true
@@ -32,7 +32,7 @@ func (ja JobAdder) PushCommandsAtomic(commands *[]string, res *struct{}) error {
 	for i, command := range *commands {
 		// I don't know why but if someone stuck a termination token
 		// in the middle of this command slice, don't post anything after it
-		if command == distribute.REMOTE_TERMINATION_TOKEN {
+		if command == distribute.RemoteTerminationToken {
 			ja.joblist.postJobs((*commands)[0:i])
 			ja.joblist.eof <- true
 			posted = true

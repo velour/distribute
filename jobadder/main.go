@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/skiesel/distribute"
+	"github.com/velour/distribute"
 	"flag"
 	"log"
 	"net"
@@ -54,7 +54,7 @@ func pushCommands(dispatcher *rpc.Client) {
 	}
 
 	if *terminate {
-		commands = append(commands, distribute.REMOTE_TERMINATION_TOKEN)
+		commands = append(commands, distribute.RemoteTerminationToken)
 	}
 
 	var res struct{}
