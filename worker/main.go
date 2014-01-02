@@ -12,7 +12,7 @@ import (
 
 var (
 	connect = flag.String("c", "", "Address of the manager to connect to")
-	port    = flag.Int("p", 1234, "The port on which to listen")
+	port    = flag.Int("p", 1234, "The port on which to listen for workers")
 )
 
 type Worker struct{}
