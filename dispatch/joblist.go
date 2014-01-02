@@ -2,6 +2,7 @@ package main
 
 import (
 	"container/list"
+	"github.com/skiesel/distribute"
 	"log"
 	"os"
 	"strings"
@@ -18,7 +19,7 @@ const (
 	resultRepost
 )
 
-// result is the result of a job that a worker may pass back
+// Result is the result of a job that a worker may pass back
 // to the job list.
 type result struct {
 	status int
@@ -26,24 +27,24 @@ type result struct {
 	output string
 }
 
-// joblist stores the different jobs and distributes them to
+// Joblist stores the different jobs and distributes them to
 // workers upon request.
 type joblist struct {
 	q                   *list.List
 	n, nok, nfail, ntot int
 	goteof              bool
-	eof                 chan bool   // receiving EOF signal from command file
-	post                chan string // receiving posted jobs
-	jobs                chan string // sending jobs to workers
-	done                chan result // receiving jobs completions
+	eof                 chan bool     // receiving EOF signal from command file
+	post                chan []string // receiving posted jobs
+	jobs                chan string   // sending jobs to workers
+	done                chan result   // receiving jobs completions
 }
 
-// newJoblist makes a new joblist
+// NewJoblist makes a new joblist
 func newJoblist(finished chan<- bool) *joblist {
 	j := &joblist{
 		q:    list.New(),
 		eof:  make(chan bool),
-		post: make(chan string),
+		post: make(chan []string),
 		jobs: make(chan string),
 		done: make(chan result),
 	}
@@ -51,13 +52,13 @@ func newJoblist(finished chan<- bool) *joblist {
 	return j
 }
 
-// postJob posts a new command to the joblist
-func (j *joblist) postJob(cmd string) {
-	j.ntot++
-	j.post <- cmd
+// PostJobs posts a new command list to the joblist
+func (j *joblist) postJobs(cmds []string) {
+	j.ntot += len(cmds)
+	j.post <- cmds
 }
 
-// failJob notifies the joblist that the given command failed
+// FailJob notifies the joblist that the given command failed
 func (j *joblist) failJob(cmd string, output string) {
 	j.done <- result{
 		status: resultFail,
@@ -66,7 +67,7 @@ func (j *joblist) failJob(cmd string, output string) {
 	}
 }
 
-// finishJob notifies the joblist that the given command
+// FinishJob notifies the joblist that the given command
 // completed successfully
 func (j *joblist) finishJob(cmd string) {
 	j.done <- result{
@@ -75,7 +76,7 @@ func (j *joblist) finishJob(cmd string) {
 	}
 }
 
-// repostJob notifies the joblist that the given command
+// RepostJob notifies the joblist that the given command
 // needs to be re-posted
 func (j *joblist) repostJob(cmd string) {
 	j.done <- result{
@@ -95,7 +96,7 @@ func (j *joblist) Go(finished chan<- bool) {
 		if j.q.Len() > 0 {
 			front = j.q.Front().Value.(string)
 
-			if strings.Contains(front, "PLEASE WAIT HERE") {
+			if strings.Contains(front, distribute.BarrierToken) {
 				barrierActive = true
 				j.n--
 				completionMark = j.ntot - j.n
@@ -118,12 +119,12 @@ func (j *joblist) Go(finished chan<- bool) {
 			if j.n == 0 {
 				goto done
 			}
-
 		case p := <-j.post:
-			logfile.Printf("joblist: got post [%s]\n", p)
-			j.n++
-			j.q.PushBack(p)
-
+			for _, job := range p {
+				logfile.Printf("joblist: got post [%s]\n", job)
+				j.n++
+				j.q.PushBack(job)
+			}
 		case p := <-j.done:
 			if j.handleDone(p) {
 				goto done
@@ -147,7 +148,7 @@ done:
 	finished <- true
 }
 
-// handleDone handles a result coming in on the done
+// HandleDone handles a result coming in on the done
 // channel.  It returns true if all jobs are completed and
 // there are no more jobs coming in from the command
 // file.
@@ -179,7 +180,7 @@ func (j *joblist) handleDone(r result) bool {
 	return false
 }
 
-// logger makes a new logger that logs to the given file
+// Logger makes a new logger that logs to the given file
 func logger(file string) *log.Logger {
 	f, err := os.Create(file)
 	if err != nil {

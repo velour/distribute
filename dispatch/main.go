@@ -3,14 +3,14 @@ package main
 import (
 	"bufio"
 	"flag"
-	"io"
 	"log"
 	"os"
 )
 
 var (
 	logfile = log.New(os.Stderr, "", log.LstdFlags)
-	inpath  = flag.String("cmdfile", "cmds", "The command file")
+	inpath  = flag.String("cmdfile", "", "The command file")
+	cmdport = flag.Int("cmdport", 2222, "The port on which to listen for workers")
 )
 
 func main() {
@@ -18,9 +18,25 @@ func main() {
 	finished := make(chan bool)
 	joblist := newJoblist(finished)
 
+	useCmdFile := false
+	useCmdPort := false
+	markFlags := func(f *flag.Flag) {
+		if f.Name == "cmdport" {
+			useCmdPort = true
+		} else if f.Name == "cmdfile" {
+			useCmdFile = true
+		}
+	}
+	flag.Visit(markFlags)
+
 	startWorkers(joblist)
 
-	postCommands(joblist)
+	if useCmdFile {
+		postCommandsFromFile(joblist, useCmdPort)
+	}
+	if !useCmdFile || useCmdPort {
+		go startAdders(joblist)
+	}
 
 	<-finished
 	logfile.Printf("%d jobs succeeded\n", joblist.nok)
@@ -28,27 +44,24 @@ func main() {
 	logfile.Printf("%d jobs completed\n", joblist.nok+joblist.nfail)
 }
 
-// postCommands reads the command file and posts
+// PostCommands reads the command file and posts
 // each line as a command to the joblist.
-func postCommands(joblist *joblist) {
+func postCommandsFromFile(joblist *joblist, useCmdPort bool) {
 	infile, err := os.Open(*inpath)
 	if err != nil {
 		logfile.Fatalf("failed to open %s: %s\n", *inpath, err)
 	}
 
-	in := bufio.NewReader(infile)
-	for {
-		switch str, prefix, err := in.ReadLine(); {
-		case err == io.EOF:
-			joblist.eof <- true
-			return
-		case err != nil:
-			logfile.Fatalf("failed to read line from %s: %s\n", *inpath, err)
-		case prefix:
-			logfile.Fatalf("line is too long")
-		case len(str) > 0:
-			joblist.postJob(string(str))
-		}
+	scanner := bufio.NewScanner(infile)
+	for scanner.Scan() {
+		jobSlice := []string{scanner.Text()}
+		joblist.postJobs(jobSlice)
 	}
-	panic("Unreachable")
+
+	// We don't know when we'll get more commands if we're listening
+	// on a port, so don't terminate the joblist when we read to the
+	// end of the file
+	if !useCmdPort {
+		joblist.eof <- true
+	}
 }
