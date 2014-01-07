@@ -10,7 +10,7 @@ import (
 var (
 	logfile = log.New(os.Stderr, "", log.LstdFlags)
 	inpath  = flag.String("cmdfile", "", "The command file")
-	cmdport  = flag.Int("cmdport", 2222, "The port on which to listen for workers")
+	cmdport = flag.Int("cmdport", 2222, "The port on which to listen for workers")
 )
 
 func main() {

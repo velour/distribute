@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/velour/distribute"
 	"container/list"
+	"github.com/velour/distribute"
 	"log"
 	"os"
 	"strings"
@@ -33,10 +33,10 @@ type joblist struct {
 	q                   *list.List
 	n, nok, nfail, ntot int
 	goteof              bool
-	eof                 chan bool   // receiving EOF signal from command file
-	post 								chan []string // receiving posted jobs
-	jobs                chan string // sending jobs to workers
-	done                chan result // receiving jobs completions
+	eof                 chan bool     // receiving EOF signal from command file
+	post                chan []string // receiving posted jobs
+	jobs                chan string   // sending jobs to workers
+	done                chan result   // receiving jobs completions
 }
 
 // NewJoblist makes a new joblist
