@@ -53,7 +53,8 @@ func (ja JobAdder) PushCommandsAtomic(commands *[]string, res *struct{}) error {
 // StartAdders registers the jobadder and accepts
 // incoming connections
 func startAdders(joblist *joblist) {
-	jobAdder := JobAdder{ joblist }
+	jobAdder := JobAdder{joblist}
+
 	rpc.Register(&jobAdder)
 	l, err := net.Listen("tcp", ":"+strconv.Itoa(*cmdport))
 	if err != nil {
@@ -62,4 +63,3 @@ func startAdders(joblist *joblist) {
 	logfile.Print("listening for new commands on ", l.Addr())
 	go rpc.Accept(l)
 }
-

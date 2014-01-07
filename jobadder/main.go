@@ -1,19 +1,19 @@
 package main
 
 import (
-	"github.com/velour/distribute"
+	"bufio"
 	"flag"
+	"github.com/velour/distribute"
 	"log"
 	"net"
 	"net/rpc"
-	"bufio"
 	"os"
 )
 
 var (
-	connect = flag.String("c", "", "Address of the dispatcher to connect to")
-	inpath  = flag.String("cmdfile", "cmds", "The command file")
-	atomic  = flag.Bool("atomic", false, "Should this list of commands be run atomically")
+	connect   = flag.String("c", "", "Address of the dispatcher to connect to")
+	inpath    = flag.String("cmdfile", "cmds", "The command file")
+	atomic    = flag.Bool("atomic", false, "Should this list of commands be run atomically")
 	terminate = flag.Bool("terminate", false, "Ask the dispatcher to terminate when finished")
 )
 
@@ -33,7 +33,7 @@ func main() {
 
 	dispatcher := rpc.NewClient(conn)
 
-	pushCommands(dispatcher)	
+	pushCommands(dispatcher)
 
 	dispatcher.Close()
 }
@@ -59,7 +59,8 @@ func pushCommands(dispatcher *rpc.Client) {
 
 	var res struct{}
 	if *atomic {
-		err = dispatcher.Call("JobAdder.PushCommandsAtomic", &commands, &res)	
+		err = dispatcher.Call("JobAdder.PushCommandsAtomic", &commands, &res)
+
 	} else {
 		dispatcher.Call("JobAdder.PushCommands", &commands, &res)
 	}
