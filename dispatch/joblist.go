@@ -2,7 +2,7 @@ package main
 
 import (
 	"container/list"
-	"github.com/skiesel/distribute"
+	"github.com/velour/distribute"
 	"log"
 	"os"
 	"strings"

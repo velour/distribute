@@ -1,6 +1,6 @@
 package distribute
 
-var (
+const (
 	BarrierToken           = "PLEASE WAIT HERE"
 	RemoteTerminationToken = "PLEASE TERMINATE"
 )

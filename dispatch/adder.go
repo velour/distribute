@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/skiesel/distribute"
+	"github.com/velour/distribute"
 	"net"
 	"net/rpc"
 	"strconv"
@@ -11,6 +11,8 @@ type JobAdder struct {
 	joblist *joblist
 }
 
+// PushCommands pushes all the commands in the slice as individual entities
+// This means that they may be interleaved with other job requests
 func (ja JobAdder) PushCommands(commands *[]string, res *struct{}) error {
 	for _, command := range *commands {
 		if command == distribute.RemoteTerminationToken {
@@ -26,6 +28,8 @@ func (ja JobAdder) PushCommands(commands *[]string, res *struct{}) error {
 	return nil
 }
 
+// PushCommandsAtomic pushes all the commands in the slice as one entity
+// This means that this won't be interleaved with other job requests
 func (ja JobAdder) PushCommandsAtomic(commands *[]string, res *struct{}) error {
 
 	posted := false
@@ -46,10 +50,11 @@ func (ja JobAdder) PushCommandsAtomic(commands *[]string, res *struct{}) error {
 	return nil
 }
 
-// StartAdders reads the command file and posts
-// each line as a command to the joblist.
+// StartAdders registers the jobadder and accepts
+// incoming connections
 func startAdders(joblist *joblist) {
 	jobAdder := JobAdder{joblist}
+
 	rpc.Register(&jobAdder)
 	l, err := net.Listen("tcp", ":"+strconv.Itoa(*cmdport))
 	if err != nil {

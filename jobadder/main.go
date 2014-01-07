@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"flag"
-	"github.com/skiesel/distribute"
+	"github.com/velour/distribute"
 	"log"
 	"net"
 	"net/rpc"
@@ -60,6 +60,7 @@ func pushCommands(dispatcher *rpc.Client) {
 	var res struct{}
 	if *atomic {
 		err = dispatcher.Call("JobAdder.PushCommandsAtomic", &commands, &res)
+
 	} else {
 		dispatcher.Call("JobAdder.PushCommands", &commands, &res)
 	}
